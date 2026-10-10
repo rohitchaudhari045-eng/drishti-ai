@@ -1,12 +1,16 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TopNav({ 
   currentTabTitle, 
   onToggleMobileSidebar, 
   onBackToLanding,
   onRefreshData,
-  isRefreshing
+  isRefreshing,
+  onOpenAuthModal
 }) {
+  const { currentUser, logOut } = useAuth();
+
   return (
     <header className="dashboard-topnav">
       <div className="topnav-left">
@@ -32,11 +36,37 @@ export default function TopNav({
       </div>
 
       <div className="topnav-right">
-        {/* Environment / Demo Pill */}
-        <div className="demo-mode-pill">
-          <span className="demo-pulse"></span>
-          <span>Sample Environment</span>
-        </div>
+        {/* Environment / User Pill */}
+        {currentUser ? (
+          <div className="demo-mode-pill authed-mode-pill" title={`Authenticated: ${currentUser.email}`}>
+            <span className="demo-pulse" style={{ backgroundColor: '#22c55e' }}></span>
+            <span>{currentUser.displayName || currentUser.email}</span>
+          </div>
+        ) : (
+          <div className="demo-mode-pill">
+            <span className="demo-pulse"></span>
+            <span>Sample Environment</span>
+          </div>
+        )}
+
+        {/* Auth CTA button if not logged in, or Sign Out if logged in */}
+        {currentUser ? (
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={logOut}
+            title="Sign out of Firebase"
+          >
+            Sign Out
+          </button>
+        ) : (
+          <button 
+            className="btn btn-outline-yellow btn-sm"
+            onClick={() => onOpenAuthModal && onOpenAuthModal('signin')}
+            title="Sign In with Firebase"
+          >
+            Sign In
+          </button>
+        )}
 
         {/* Refresh Simulation Trigger */}
         <button 

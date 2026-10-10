@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { subscribeUserAgents, subscribeUserWorkflows } from '../../lib/firestoreService';
 
 const MENU_ITEMS = [
   {
@@ -78,8 +80,48 @@ export default function Sidebar({
   onSelectTab, 
   onBackToLanding, 
   mobileOpen, 
-  onCloseMobile 
+  onCloseMobile,
+  onOpenAuthModal
 }) {
+  const { currentUser, logOut } = useAuth();
+  const [agentCount, setAgentCount] = React.useState(null);
+  const [wfCount, setWfCount] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!currentUser) {
+      setAgentCount(null);
+      setWfCount(null);
+      return;
+    }
+
+    const unsubAgents = subscribeUserAgents(currentUser.uid, (agents) => {
+      setAgentCount(agents.length);
+    });
+
+    const unsubWfs = subscribeUserWorkflows(currentUser.uid, (wfs) => {
+      setWfCount(wfs.filter(w => w.enabled).length);
+    });
+
+    return () => {
+      unsubAgents();
+      unsubWfs();
+    };
+  }, [currentUser]);
+
+  const getBadge = (itemId, defaultBadge) => {
+    if (!currentUser) return defaultBadge;
+    if (itemId === 'agents' && agentCount !== null) return `${agentCount} Fleet`;
+    if (itemId === 'workflows' && wfCount !== null) return `${wfCount} Live`;
+    return defaultBadge;
+  };
+
+  const getInitials = () => {
+    if (!currentUser) return 'AD';
+    if (currentUser.displayName) return currentUser.displayName.slice(0, 2).toUpperCase();
+    if (currentUser.email) return currentUser.email.slice(0, 2).toUpperCase();
+    return 'US';
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -110,12 +152,14 @@ export default function Sidebar({
 
         {/* Workspace Selector Pill */}
         <div className="sidebar-workspace-pill">
-          <div className="workspace-avatar">D</div>
-          <div className="workspace-info">
-            <span className="workspace-name">Demo Workspace</span>
-            <span className="workspace-tier">SaaS Enterprise Plan</span>
+          <div className="workspace-avatar">
+            {currentUser ? 'A' : 'D'}
           </div>
-          <span className="workspace-status-dot" title="Connected"></span>
+          <div className="workspace-info">
+            <span className="workspace-name">{currentUser ? 'Production Cluster' : 'Demo Workspace'}</span>
+            <span className="workspace-tier">{currentUser ? 'Authenticated Session' : 'SaaS Enterprise Plan'}</span>
+          </div>
+          <span className="workspace-status-dot" title={currentUser ? 'Connected & Authenticated' : 'Connected (Sample)'}></span>
         </div>
 
         {/* Main Navigation Menu */}
@@ -135,9 +179,9 @@ export default function Sidebar({
               >
                 <span className="sidebar-nav-icon">{item.icon}</span>
                 <span className="sidebar-nav-label">{item.label}</span>
-                {item.badge && (
+                {getBadge(item.id, item.badge) && (
                   <span className={`sidebar-item-badge ${isActive ? 'badge-active' : ''}`}>
-                    {item.badge}
+                    {getBadge(item.id, item.badge)}
                   </span>
                 )}
               </button>
@@ -160,13 +204,49 @@ export default function Sidebar({
             Back to Website
           </button>
 
-          <div className="sidebar-user-card">
-            <div className="user-avatar">AD</div>
-            <div className="user-meta">
-              <span className="user-name">System Operator</span>
-              <span className="user-role">admin@drishti.ai</span>
+          {currentUser ? (
+            <div className="sidebar-user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                <div className="user-avatar" style={{ backgroundColor: '#FFB800', color: '#08080A', fontWeight: 700 }}>
+                  {getInitials()}
+                </div>
+                <div className="user-meta" style={{ overflow: 'hidden' }}>
+                  <span className="user-name" style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {currentUser.displayName || 'Operator'}
+                  </span>
+                  <span className="user-role" style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {currentUser.email}
+                  </span>
+                </div>
+              </div>
+              <button 
+                type="button"
+                className="btn-sidebar-signout"
+                onClick={logOut}
+                title="Sign out of Firebase"
+                aria-label="Sign Out"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </button>
             </div>
-          </div>
+          ) : (
+            <div 
+              className="sidebar-user-card sidebar-user-card-cta"
+              onClick={() => onOpenAuthModal && onOpenAuthModal('signin')}
+              style={{ cursor: 'pointer' }}
+              title="Click to Sign In with Firebase"
+            >
+              <div className="user-avatar">AD</div>
+              <div className="user-meta">
+                <span className="user-name">Guest Mode</span>
+                <span className="user-role" style={{ color: 'var(--accent-yellow)' }}>Sign In with Firebase →</span>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </>

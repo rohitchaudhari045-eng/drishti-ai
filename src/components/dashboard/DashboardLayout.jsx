@@ -17,7 +17,7 @@ const TAB_TITLES = {
   settings: 'Settings'
 };
 
-export default function DashboardLayout({ onBackToLanding }) {
+export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
   const [currentTab, setCurrentTab] = useState('overview');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,19 +32,19 @@ export default function DashboardLayout({ onBackToLanding }) {
   const renderActiveView = () => {
     switch (currentTab) {
       case 'overview':
-        return <OverviewView />;
+        return <OverviewView onOpenAuthModal={onOpenAuthModal} />;
       case 'agents':
-        return <AgentsView />;
+        return <AgentsView onOpenAuthModal={onOpenAuthModal} />;
       case 'workflows':
-        return <WorkflowsView />;
+        return <WorkflowsView onOpenAuthModal={onOpenAuthModal} />;
       case 'analytics':
-        return <AnalyticsView />;
+        return <AnalyticsView onOpenAuthModal={onOpenAuthModal} />;
       case 'logs':
-        return <LogsView />;
+        return <LogsView onOpenAuthModal={onOpenAuthModal} />;
       case 'settings':
-        return <SettingsView />;
+        return <SettingsView onOpenAuthModal={onOpenAuthModal} />;
       default:
-        return <OverviewView />;
+        return <OverviewView onOpenAuthModal={onOpenAuthModal} />;
     }
   };
 
@@ -57,6 +57,7 @@ export default function DashboardLayout({ onBackToLanding }) {
         onBackToLanding={onBackToLanding}
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        onOpenAuthModal={onOpenAuthModal}
       />
 
       {/* Main Content Area */}
@@ -68,6 +69,7 @@ export default function DashboardLayout({ onBackToLanding }) {
           onBackToLanding={onBackToLanding}
           onRefreshData={handleRefresh}
           isRefreshing={isRefreshing}
+          onOpenAuthModal={onOpenAuthModal}
         />
 
         {/* View Container */}

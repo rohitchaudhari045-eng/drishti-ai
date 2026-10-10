@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import LandingPage from './components/LandingPage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
+import AuthModal from './components/auth/AuthModal';
 
 export default function App() {
   // Simple view switcher: 'landing' or 'dashboard'
   const [view, setView] = useState('landing');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('signin'); // 'signin' or 'signup'
 
   useEffect(() => {
     // Check if user navigates with #dashboard hash
@@ -34,14 +37,40 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (view === 'dashboard') {
-    return <DashboardLayout onBackToLanding={navigateToLanding} />;
-  }
+  const openAuthModal = (mode = 'signin') => {
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleAuthSuccess = () => {
+    // Upon successful authentication, smoothly navigate to dashboard
+    navigateToDashboard();
+  };
 
   return (
-    <div className="app-layout">
-      <Navbar onNavigateToDashboard={navigateToDashboard} />
-      <LandingPage onNavigateToDashboard={navigateToDashboard} />
-    </div>
+    <>
+      {view === 'dashboard' ? (
+        <DashboardLayout 
+          onBackToLanding={navigateToLanding} 
+          onOpenAuthModal={openAuthModal}
+        />
+      ) : (
+        <div className="app-layout">
+          <Navbar 
+            onNavigateToDashboard={navigateToDashboard} 
+            onOpenAuthModal={openAuthModal}
+          />
+          <LandingPage onNavigateToDashboard={navigateToDashboard} />
+        </div>
+      )}
+
+      {/* Global Firebase Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onSuccess={handleAuthSuccess}
+      />
+    </>
   );
 }

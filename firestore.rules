@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =======================================================================
+    // HELPER FUNCTIONS
+    // =======================================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =======================================================================
+    // USER PROFILE & WORKSPACE CONFIGURATION
+    // Path: /users/{userId}
+    // =======================================================================
+    match /users/{userId} {
+      // Owner can read their own profile document
+      allow read: if isOwner(userId);
+
+      // Creation allowed during initial sign-up
+      allow create: if isOwner(userId)
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() > 3
+                    && request.resource.data.plan == 'Developer Free Tier';
+
+      // Updates allowed on user-editable fields only;
+      // Privileged fields ('plan', 'email', 'createdAt') are strictly protected against client-side elevation.
+      allow update: if isOwner(userId)
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan', 'email', 'createdAt']))
+                    && request.resource.data.plan == resource.data.plan
+                    && request.resource.data.email == resource.data.email;
+
+      // Root user profile deletion is denied from the client SDK
+      allow delete: if false;
+
+      // =====================================================================
+      // AI AGENTS SUBCOLLECTION
+      // Path: /users/{userId}/agents/{agentId}
+      // =====================================================================
+      match /agents/{agentId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() >= 2
+                      && request.resource.data.name.size() <= 100
+                      && request.resource.data.role is string
+                      && request.resource.data.role.size() >= 2;
+
+        allow update: if isOwner(userId)
+                      && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+
+        allow delete: if isOwner(userId);
+      }
+
+      // =====================================================================
+      // WORKFLOWS SUBCOLLECTION
+      // Path: /users/{userId}/workflows/{workflowId}
+      // =====================================================================
+      match /workflows/{workflowId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() >= 2
+                      && request.resource.data.name.size() <= 120
+                      && request.resource.data.trigger is string;
+
+        allow update: if isOwner(userId)
+                      && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['createdAt']));
+
+        allow delete: if isOwner(userId);
+      }
+
+      // =====================================================================
+      // ACTIVITY & AUDIT LOGS SUBCOLLECTION
+      // Path: /users/{userId}/activity_logs/{logId}
+      // =====================================================================
+      match /activity_logs/{logId} {
+        allow read: if isOwner(userId);
+
+        // Append-only audit log: can create new log entries
+        allow create: if isOwner(userId)
+                      && request.resource.data.level in ['INFO', 'SUCCESS', 'WARN', 'ERROR']
+                      && request.resource.data.message is string
+                      && request.resource.data.message.size() <= 500;
+
+        // Audit records are immutable: updates and client deletions are prohibited
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    // =======================================================================
+    // DEFAULT CATCH-ALL: DENY ALL OTHER PATHS
+    // =======================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
