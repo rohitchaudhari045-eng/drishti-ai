@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TopNav({ 
@@ -7,9 +7,28 @@ export default function TopNav({
   onBackToLanding,
   onRefreshData,
   isRefreshing,
-  onOpenAuthModal
+  onOpenAuthModal,
+  onNavigateToLogin
 }) {
   const { currentUser, logOut } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const displayName = currentUser?.displayName || 'Rohit Chaudhari';
+
+  const getInitials = () => {
+    if (currentUser?.displayName) {
+      return currentUser.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    }
+    return 'RC';
+  };
+
+  const notifications = [
+    { id: 1, title: 'Workflow Executed', desc: 'Payment Processing finished in 42ms.', time: '2m ago' },
+    { id: 2, title: 'New Agent Deployed', desc: 'Customer Support Agent is now active.', time: '12m ago' },
+    { id: 3, title: 'System Heartbeat', desc: 'All platform runners operating at 100% SLA.', time: '18m ago' }
+  ];
 
   return (
     <header className="dashboard-topnav">
@@ -27,67 +46,140 @@ export default function TopNav({
           </svg>
         </button>
 
-        {/* Current Tab Title Breadcrumb */}
-        <div className="topnav-breadcrumbs">
-          <span className="crumb-root">DRISHTI Control Plane</span>
-          <span className="crumb-divider">/</span>
-          <span className="crumb-current">{currentTabTitle}</span>
+        {/* Global Search Bar (Matching Reference Image 1) */}
+        <div className="topnav-search-pill">
+          <span className="topnav-search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input
+            type="text"
+            className="topnav-search-input"
+            placeholder="Search agents, workflows, logs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
       <div className="topnav-right">
-        {/* Environment / User Pill */}
-        {currentUser ? (
-          <div className="demo-mode-pill authed-mode-pill" title={`Authenticated: ${currentUser.email}`}>
-            <span className="demo-pulse" style={{ backgroundColor: '#22c55e' }}></span>
-            <span>{currentUser.displayName || currentUser.email}</span>
-          </div>
-        ) : (
-          <div className="demo-mode-pill">
-            <span className="demo-pulse"></span>
-            <span>Sample Environment</span>
-          </div>
-        )}
-
-        {/* Auth CTA button if not logged in, or Sign Out if logged in */}
-        {currentUser ? (
+        {/* Notification Bell (Reference Image 1) */}
+        <div style={{ position: 'relative' }}>
           <button 
-            className="btn btn-secondary btn-sm"
-            onClick={logOut}
-            title="Sign out of Firebase"
+            type="button"
+            className="topnav-icon-btn"
+            onClick={() => {
+              setNotificationsOpen(!notificationsOpen);
+              setProfileDropdownOpen(false);
+            }}
+            title="Notifications"
+            aria-label="Notifications"
           >
-            Sign Out
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span className="topnav-notification-dot"></span>
           </button>
-        ) : (
-          <button 
-            className="btn btn-outline-yellow btn-sm"
-            onClick={() => onOpenAuthModal && onOpenAuthModal('signin')}
-            title="Sign In with Firebase"
+
+          {/* Notifications Dropdown */}
+          {notificationsOpen && (
+            <div className="topnav-popover-menu" onClick={(e) => e.stopPropagation()}>
+              <div className="popover-header-row">
+                <span className="popover-heading">Platform Notifications</span>
+                <span className="badge-new">3 New</span>
+              </div>
+              <div className="popover-items-list">
+                {notifications.map((n) => (
+                  <div key={n.id} className="popover-notif-item">
+                    <div className="popover-notif-title">{n.title}</div>
+                    <div className="popover-notif-desc">{n.desc}</div>
+                    <div className="popover-notif-time">{n.time}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Avatar + Name + Dropdown Trigger (Matching Reference Image 1) */}
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            className="topnav-user-btn"
+            onClick={() => {
+              setProfileDropdownOpen(!profileDropdownOpen);
+              setNotificationsOpen(false);
+            }}
           >
-            Sign In
+            <div className="topnav-user-avatar">
+              {currentUser?.photoURL ? (
+                <img src={currentUser.photoURL} alt={displayName} />
+              ) : (
+                <span>{getInitials()}</span>
+              )}
+            </div>
+            <span className="topnav-user-name">{displayName}</span>
+            <span className="topnav-chevron">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
           </button>
-        )}
 
-        {/* Refresh Simulation Trigger */}
-        <button 
-          className={`btn-icon-action ${isRefreshing ? 'is-spinning' : ''}`}
-          onClick={onRefreshData}
-          title="Refresh live metrics simulation"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-        </button>
+          {/* TopNav User Dropdown */}
+          {profileDropdownOpen && (
+            <div className="topnav-popover-menu topnav-user-dropdown" onClick={(e) => e.stopPropagation()}>
+              <div className="popover-header-row">
+                <div>
+                  <div className="popover-heading">{displayName}</div>
+                  <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                    {currentUser?.email || 'rohit@example.com'}
+                  </div>
+                </div>
+              </div>
+              <div className="popover-menu-options">
+                <button 
+                  type="button" 
+                  className="popover-link-action"
+                  onClick={() => {
+                    if (onBackToLanding) onBackToLanding();
+                    setProfileDropdownOpen(false);
+                  }}
+                >
+                  Back to Website
+                </button>
 
-        {/* Quick Back to Landing Page Button */}
-        <button 
-          className="btn btn-secondary btn-sm"
-          onClick={onBackToLanding}
-        >
-          Exit to Website
-        </button>
+                {currentUser ? (
+                  <button 
+                    type="button" 
+                    className="popover-link-action text-danger"
+                    onClick={() => {
+                      logOut();
+                      setProfileDropdownOpen(false);
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                ) : (
+                  <button 
+                    type="button" 
+                    className="popover-link-action text-primary"
+                    onClick={() => {
+                      if (onNavigateToLogin) onNavigateToLogin('signin');
+                      else if (onOpenAuthModal) onOpenAuthModal('signin');
+                      setProfileDropdownOpen(false);
+                    }}
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

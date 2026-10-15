@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Navbar({ onNavigateToDashboard, onOpenAuthModal }) {
+export default function Navbar({ onNavigateToDashboard, onOpenAuthModal, onNavigateToLogin }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { currentUser, logOut } = useAuth();
@@ -89,15 +89,15 @@ export default function Navbar({ onNavigateToDashboard, onOpenAuthModal }) {
           ) : (
             <>
               <button 
-                type="button"
-                onClick={() => onOpenAuthModal ? onOpenAuthModal('signin') : onNavigateToDashboard()} 
+                type="button" 
+                onClick={() => (onNavigateToLogin ? onNavigateToLogin('signin') : onOpenAuthModal('signin'))} 
                 className="btn btn-secondary btn-sm"
               >
                 Sign In
               </button>
               <button 
-                type="button"
-                onClick={() => onOpenAuthModal ? onOpenAuthModal('signup') : onNavigateToDashboard()} 
+                type="button" 
+                onClick={() => (onNavigateToLogin ? onNavigateToLogin('signup') : onOpenAuthModal('signup'))} 
                 className="btn btn-primary btn-sm"
               >
                 Sign Up
@@ -166,7 +166,8 @@ export default function Navbar({ onNavigateToDashboard, onOpenAuthModal }) {
                   style={{ width: '100%' }} 
                   onClick={() => { 
                     setMobileMenuOpen(false); 
-                    if (onOpenAuthModal) onOpenAuthModal('signin'); 
+                    if (onNavigateToLogin) onNavigateToLogin('signin');
+                    else if (onOpenAuthModal) onOpenAuthModal('signin'); 
                     else onNavigateToDashboard(); 
                   }}
                 >
@@ -178,7 +179,8 @@ export default function Navbar({ onNavigateToDashboard, onOpenAuthModal }) {
                   style={{ width: '100%' }} 
                   onClick={() => { 
                     setMobileMenuOpen(false); 
-                    if (onOpenAuthModal) onOpenAuthModal('signup'); 
+                    if (onNavigateToLogin) onNavigateToLogin('signup');
+                    else if (onOpenAuthModal) onOpenAuthModal('signup'); 
                     else onNavigateToDashboard(); 
                   }}
                 >

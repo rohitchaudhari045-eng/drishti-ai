@@ -7,6 +7,7 @@ import WorkflowsView from './WorkflowsView';
 import AnalyticsView from './AnalyticsView';
 import LogsView from './LogsView';
 import SettingsView from './SettingsView';
+import './dashboard-light.css';
 
 const TAB_TITLES = {
   overview: 'Overview',
@@ -17,7 +18,7 @@ const TAB_TITLES = {
   settings: 'Settings'
 };
 
-export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
+export default function DashboardLayout({ onBackToLanding, onOpenAuthModal, onNavigateToLogin }) {
   const [currentTab, setCurrentTab] = useState('overview');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -32,7 +33,13 @@ export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
   const renderActiveView = () => {
     switch (currentTab) {
       case 'overview':
-        return <OverviewView onOpenAuthModal={onOpenAuthModal} />;
+        return (
+          <OverviewView 
+            onOpenAuthModal={onOpenAuthModal} 
+            onNavigateToLogin={onNavigateToLogin}
+            onSelectTab={setCurrentTab}
+          />
+        );
       case 'agents':
         return <AgentsView onOpenAuthModal={onOpenAuthModal} />;
       case 'workflows':
@@ -44,7 +51,13 @@ export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
       case 'settings':
         return <SettingsView onOpenAuthModal={onOpenAuthModal} />;
       default:
-        return <OverviewView onOpenAuthModal={onOpenAuthModal} />;
+        return (
+          <OverviewView 
+            onOpenAuthModal={onOpenAuthModal} 
+            onNavigateToLogin={onNavigateToLogin}
+            onSelectTab={setCurrentTab}
+          />
+        );
     }
   };
 
@@ -58,6 +71,7 @@ export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         onOpenAuthModal={onOpenAuthModal}
+        onNavigateToLogin={onNavigateToLogin}
       />
 
       {/* Main Content Area */}
@@ -70,6 +84,7 @@ export default function DashboardLayout({ onBackToLanding, onOpenAuthModal }) {
           onRefreshData={handleRefresh}
           isRefreshing={isRefreshing}
           onOpenAuthModal={onOpenAuthModal}
+          onNavigateToLogin={onNavigateToLogin}
         />
 
         {/* View Container */}

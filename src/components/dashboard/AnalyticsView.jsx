@@ -1,103 +1,119 @@
 import React from 'react';
 
 const HOURLY_DATA = [
-  { hour: '00:00', tasks: 1200, height: '35%' },
-  { hour: '03:00', tasks: 850, height: '25%' },
-  { hour: '06:00', tasks: 1900, height: '55%' },
-  { hour: '09:00', tasks: 3400, height: '90%' },
-  { hour: '12:00', tasks: 3800, height: '100%' },
-  { hour: '15:00', tasks: 3200, height: '85%' },
-  { hour: '18:00', tasks: 2600, height: '70%' },
-  { hour: '21:00', tasks: 1750, height: '48%' }
+  { hour: 'Mon', tasks: 1200, height: '45%' },
+  { hour: 'Tue', tasks: 1850, height: '60%' },
+  { hour: 'Wed', tasks: 2900, height: '85%' },
+  { hour: 'Thu', tasks: 2400, height: '72%' },
+  { hour: 'Fri', tasks: 3800, height: '100%' },
+  { hour: 'Sat', tasks: 2100, height: '65%' },
+  { hour: 'Sun', tasks: 2600, height: '78%' }
 ];
 
 export default function AnalyticsView() {
   return (
-    <div className="tab-view-container">
-      <div className="section-block-header">
+    <div className="subpage-root">
+      <div className="subpage-header-row">
         <div>
-          <h2 className="block-title">Operational Analytics</h2>
-          <p className="block-sub">Aggregated system telemetry, execution volume, and latency percentiles</p>
+          <h1 className="subpage-title">Analytics</h1>
+          <p className="subpage-subtitle">Platform telemetry, operational volume, and system latency percentiles.</p>
+        </div>
+      </div>
+
+      {/* 4 Stat Cards */}
+      <div className="subpage-stats-grid">
+        <div className="subpage-stat-card">
+          <div className="stat-card-label">Total Executions</div>
+          <div className="stat-card-value">16,850</div>
+        </div>
+        <div className="subpage-stat-card">
+          <div className="stat-card-label">Avg SLA Uptime</div>
+          <div className="stat-card-value-row">
+            <span className="stat-card-value">99.98%</span>
+            <span className="stat-dot dot-green"></span>
+          </div>
+        </div>
+        <div className="subpage-stat-card">
+          <div className="stat-card-label">Median Latency</div>
+          <div className="stat-card-value-row">
+            <span className="stat-card-value">42 ms</span>
+            <span className="stat-dot dot-amber"></span>
+          </div>
+        </div>
+        <div className="subpage-stat-card">
+          <div className="stat-card-label">Failed Runs</div>
+          <div className="stat-card-value-row">
+            <span className="stat-card-value">0</span>
+            <span className="stat-dot dot-gray"></span>
+          </div>
         </div>
       </div>
 
       {/* Hourly Load Graph Card */}
-      <div className="card analytics-chart-card">
-        <div className="chart-header">
+      <div className="overview-card chart-card" style={{ marginBottom: '24px' }}>
+        <div className="card-header-flex">
           <div>
-            <h3 className="chart-title">Hourly Task Processing Volume</h3>
-            <p className="chart-subtitle">Sample distribution over the last 24-hour cycle</p>
+            <h2 className="card-box-title">Weekly Processing Volume</h2>
+            <p style={{ fontSize: '0.84rem', color: '#64748B', marginTop: '4px' }}>
+              Execution throughput aggregated across all active agent pipelines
+            </p>
           </div>
-          <div className="chart-legend">
-            <span className="legend-indicator"></span>
-            <span>Task Runs / Hour</span>
+          <div className="chart-legend-row">
+            <span className="legend-item">
+              <span className="legend-dot dot-yellow"></span>
+              <span>Task Executions</span>
+            </span>
           </div>
         </div>
 
-        {/* CSS Bar Chart */}
-        <div className="bar-chart-container">
+        {/* Clean CSS Bar Chart matching light theme */}
+        <div className="analytics-bar-chart-container">
           {HOURLY_DATA.map((item, idx) => (
-            <div key={idx} className="bar-column">
-              <div className="bar-wrapper">
+            <div key={idx} className="analytics-bar-column">
+              <div className="analytics-bar-wrapper">
                 <div 
-                  className="bar-fill" 
+                  className="analytics-bar-fill" 
                   style={{ height: item.height }}
-                  title={`${item.tasks.toLocaleString()} tasks at ${item.hour}`}
+                  title={`${item.tasks.toLocaleString()} tasks on ${item.hour}`}
                 ></div>
               </div>
-              <span className="bar-label">{item.hour}</span>
+              <span className="analytics-bar-label">{item.hour}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Analytics Breakdown Grid */}
-      <div className="analytics-metrics-grid">
-        <div className="card breakdown-card">
-          <h4 className="breakdown-title">Latency Breakdown</h4>
-          <div className="breakdown-item">
-            <span>P50 Median</span>
-            <span className="text-yellow">92 ms</span>
+      {/* Latency & Protocol Breakdown */}
+      <div className="analytics-breakdown-grid">
+        <div className="overview-card">
+          <h3 className="card-box-title" style={{ marginBottom: '16px' }}>Latency Breakdown</h3>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">P50 Median</span>
+            <span className="font-semibold">38 ms</span>
           </div>
-          <div className="breakdown-item">
-            <span>P90 Threshold</span>
-            <span>145 ms</span>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">P90 Threshold</span>
+            <span className="font-semibold">72 ms</span>
           </div>
-          <div className="breakdown-item">
-            <span>P99 Extreme</span>
-            <span>230 ms</span>
-          </div>
-        </div>
-
-        <div className="card breakdown-card">
-          <h4 className="breakdown-title">Trigger Protocol Distribution</h4>
-          <div className="breakdown-item">
-            <span>Inbound Webhooks</span>
-            <span className="text-yellow">54%</span>
-          </div>
-          <div className="breakdown-item">
-            <span>Cron Schedules</span>
-            <span>31%</span>
-          </div>
-          <div className="breakdown-item">
-            <span>REST API Calls</span>
-            <span>15%</span>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">P99 Maximum</span>
+            <span className="font-semibold">118 ms</span>
           </div>
         </div>
 
-        <div className="card breakdown-card">
-          <h4 className="breakdown-title">Error Fault Tolerances</h4>
-          <div className="breakdown-item">
-            <span>Auto-Retried & Resolved</span>
-            <span className="text-yellow">98.4%</span>
+        <div className="overview-card">
+          <h3 className="card-box-title" style={{ marginBottom: '16px' }}>Protocol Distribution</h3>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">Inbound Webhooks</span>
+            <span className="font-semibold text-green">58%</span>
           </div>
-          <div className="breakdown-item">
-            <span>Dead-Letter Escalated</span>
-            <span>0.06%</span>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">Cron Schedules</span>
+            <span className="font-semibold">27%</span>
           </div>
-          <div className="breakdown-item">
-            <span>Dropped / Invalid</span>
-            <span>1.54%</span>
+          <div className="breakdown-stat-row">
+            <span className="text-muted">Direct REST Triggers</span>
+            <span className="font-semibold">15%</span>
           </div>
         </div>
       </div>
